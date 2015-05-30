@@ -26,3 +26,5 @@ if [ "$1" == "push" ] ; then
   docker push ${TAG}
 fi
 
+echo "Built ${TAG}"
+

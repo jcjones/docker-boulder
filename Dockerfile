@@ -1,6 +1,6 @@
 FROM centos
 
-MAINTAINER J.C. Jones "jjones@letsencrypt.org"
+MAINTAINER J.C. Jones "jcjones@letsencrypt.org"
 
 # Boulder exposes its web application at port TCP 4000
 EXPOSE 4000
