@@ -6,24 +6,19 @@ die() {
 }
 
 REPO="quay.io/letsencrypt"
-LABEL=$(date +%Y%m%d%H%M)
-
-if [ $# -gt 0 ] ; then
-  LABEL=$1
-  shift
-fi
+LABEL=$(cd ~/letsencrypt/boulder ; git rev-parse --short HEAD)
+DEST_LABEL=stable
 
 TAG=${REPO}/boulder:${LABEL}
 
-pushd ~/letsencrypt/boulder/
-make -j4 || die
-popd
+# TODO: Check if git is out of date
 
 echo "Building ${TAG} ..."
 sudo docker build -t ${TAG} .
 
 if [ "$1" == "push" ] ; then
   docker push ${TAG}
+  docker push ${REPO}/boulder:${DEST_LABEL}
 fi
 
 echo "Built ${TAG}"
