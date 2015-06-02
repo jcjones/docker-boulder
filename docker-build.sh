@@ -7,19 +7,49 @@ die() {
 
 REPO="quay.io/letsencrypt"
 LABEL=$(cd ~/letsencrypt/boulder ; git rev-parse --short HEAD)
-DEST_LABEL=stable
-
 TAG=${REPO}/boulder:${LABEL}
 
-# TODO: Check if git is out of date
+upgrade() {
+	cd letsencrypt/boulder
 
-echo "Building ${TAG} ..."
-sudo docker build -t ${TAG} .
+	r=$(git pull)
+	if [ "Already up-to-date." == "$r" ] ; then die "$r" ; fi
 
-if [ "$1" == "push" ] ; then
+	echo "Updated."
+	make -j 9 || die "Failed"
+}
+
+build() {
+	DEST=$(mktemp -d /tmp/build-dockerXXXX)
+	mkdir -p ${DEST}/etc ${DEST}/bin
+	cp Dockerfile ${DEST}
+	cp default-boulder-config.json ${DEST}/etc
+	cp ./gocode/src/github.com/letsencrypt/boulder/test/test-ca.pem ${DEST}/etc
+	cp ./gocode/src/github.com/letsencrypt/boulder/test/test-ca.key ${DEST}/etc
+	cp ~/letsencrypt/boulder/bin/* ${DEST}/bin
+
+	cd ${DEST}
+
+	# TODO: Check if git is out of date
+
+	echo "Building ${TAG} ..."
+	docker build -t ${TAG} .
+	echo "Built ${TAG}"
+}
+
+send() {
+  docker tag -f ${TAG} ${REPO}/boulder:latest
+  docker tag -f ${TAG} ${REPO}/boulder:stable
+
   docker push ${TAG}
-  docker push ${REPO}/boulder:${DEST_LABEL}
-fi
+  docker push ${REPO}/boulder:latest
+  docker push ${REPO}/boulder:stable
+}
 
-echo "Built ${TAG}"
+case $1 in
+"upgrade") upgrade;;
+"build") build;;
+"send") send;;
+*) echo "$0 {upgrade, build, send}";;
+esac
 

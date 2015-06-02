@@ -14,8 +14,8 @@ RUN mkdir -p /etc/boulder/ && mkdir -p /usr/bin/boulder
 VOLUME [ "/etc/boulder" ]
 
 # Copy in the Boulder sources
-ADD default-boulder-config.json /etc/boulder/config.json
-ADD ./gocode/src/github.com/letsencrypt/boulder/test/test-ca.pem /etc/boulder/
-ADD ./gocode/src/github.com/letsencrypt/boulder/test/test-ca.key /etc/boulder/
-ADD ./gocode/src/github.com/letsencrypt/boulder/bin/* /usr/bin/
+ADD etc/default-boulder-config.json /etc/boulder/config.json
+ADD etc/test-ca.pem /etc/boulder/
+ADD etc/test-ca.key /etc/boulder/
+ADD bin/* /usr/bin/
 
