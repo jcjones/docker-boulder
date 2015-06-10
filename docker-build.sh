@@ -1,21 +1,29 @@
 #!/bin/bash
 
+# Tell Pipes to die early
+set -o pipefail
+
 die() {
   echo "[FATAL] $*"
   exit 1
 }
 
 REPO="quay.io/letsencrypt"
+BRANCH=$(cd ~/letsencrypt/boulder; git symbolic-ref --short HEAD)
 LABEL=$(cd ~/letsencrypt/boulder ; git rev-parse --short HEAD)
 TAG=${REPO}/boulder:${LABEL}
 
 upgrade() {
 	cd letsencrypt/boulder
 
-	r=$(git pull)
+	r=$(git pull) 
 	if [ "Already up-to-date." == "$r" ] ; then die "$r" ; fi
 
 	echo "Updated."
+}
+
+compile() {
+	cd letsencrypt/boulder
 	make -j 9 || die "Failed"
 }
 
@@ -39,17 +47,19 @@ build() {
 
 send() {
   docker tag -f ${TAG} ${REPO}/boulder:latest
-  docker tag -f ${TAG} ${REPO}/boulder:stable
+  docker tag -f ${TAG} ${REPO}/boulder:${BRANCH}
 
   docker push ${TAG}
+  docker push ${REPO}/boulder:${BRANCH}
   docker push ${REPO}/boulder:latest
-  docker push ${REPO}/boulder:stable
 }
 
 case $1 in
 "upgrade") upgrade;;
+"compile") compile;;
 "build") build;;
 "send") send;;
-*) echo "$0 {upgrade, build, send}";;
+"all") upgrade && compile && build && send;;
+*) echo "$0 {upgrade, compile; build, send, all}";;
 esac
 
