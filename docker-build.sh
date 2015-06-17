@@ -8,26 +8,40 @@ die() {
   exit 1
 }
 
-REPO="quay.io/letsencrypt"
-BRANCH=$(cd ~/letsencrypt/boulder; git symbolic-ref --short HEAD)
-LABEL=$(cd ~/letsencrypt/boulder ; git rev-parse --short HEAD)
-TAG=${REPO}/boulder:${LABEL}
+run() {
+  echo $*
+  $*
+}
+
+REPO=~/letsencrypt/boulder
+SOURCE=~/
+
+BRANCH=$(cd ${REPO}; git symbolic-ref --short HEAD)
+LABEL=$(cd ${REPO}; git rev-parse --short HEAD)
+
+DOCKER_REPO="quay.io/letsencrypt/boulder"
+TAG=${DOCKER_REPO}:${LABEL}
 
 upgrade() {
-	cd ~/letsencrypt/boulder
+	cd ${REPO}
 
 	r=$(git pull) 
 	if [ "Already up-to-date." == "$r" ] ; then die "$r" ; fi
 
-	echo "Updated."
+	BRANCH=$(cd ${REPO}; git symbolic-ref --short HEAD)
+	LABEL=$(cd ${REPO}; git rev-parse --short HEAD)
+
+	echo "Updated to ${LABEL}."
 }
 
 compile() {
-	cd ~/letsencrypt/boulder
+	cd ${REPO}
 	make -j 9 || die "Failed"
 }
 
 build() {
+	cd ${SOURCE}
+
 	DEST=$(mktemp -d /tmp/build-dockerXXXX)
 	mkdir -p ${DEST}/etc ${DEST}/bin
 	cp Dockerfile ${DEST}
@@ -41,17 +55,24 @@ build() {
 	# TODO: Check if git is out of date
 
 	echo "Building ${TAG} ..."
-	docker build -t ${TAG} .
+	run docker build -t ${TAG} .
 	echo "Built ${TAG}"
+
+	echo "Cleaning up..."
+	run rm -rf ${DEST}
 }
 
 send() {
-  docker tag -f ${TAG} ${REPO}/boulder:latest
-  docker tag -f ${TAG} ${REPO}/boulder:${BRANCH}
+  run docker tag -f ${TAG} ${DOCKER_REPO}:latest
+  run docker tag -f ${TAG} ${DOCKER_REPO}:${BRANCH}
 
-  docker push ${TAG}
-  docker push ${REPO}/boulder:${BRANCH}
-  docker push ${REPO}/boulder:latest
+  run docker push ${TAG}
+  run docker push ${DOCKER_REPO}:${BRANCH}
+  run docker push ${DOCKER_REPO}:latest
+}
+
+stats() {
+  echo "Currently at ${TAG}"
 }
 
 case $1 in
@@ -59,7 +80,9 @@ case $1 in
 "compile") compile;;
 "build") build;;
 "send") send;;
+"rebuild") compile && build && send;;
 "all") upgrade && compile && build && send;;
-*) echo "$0 {upgrade, compile; build, send, all}";;
+"status") stats;;
+*) echo "$0 {upgrade, compile; build, send, rebuild, all}";;
 esac
 
