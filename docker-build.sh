@@ -14,7 +14,7 @@ LABEL=$(cd ~/letsencrypt/boulder ; git rev-parse --short HEAD)
 TAG=${REPO}/boulder:${LABEL}
 
 upgrade() {
-	cd letsencrypt/boulder
+	cd ~/letsencrypt/boulder
 
 	r=$(git pull) 
 	if [ "Already up-to-date." == "$r" ] ; then die "$r" ; fi
@@ -23,7 +23,7 @@ upgrade() {
 }
 
 compile() {
-	cd letsencrypt/boulder
+	cd ~/letsencrypt/boulder
 	make -j 9 || die "Failed"
 }
 
