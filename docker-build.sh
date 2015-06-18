@@ -15,12 +15,12 @@ run() {
 
 REPO=~/letsencrypt/boulder
 SOURCE=~/
+DOCKER_REPO="quay.io/letsencrypt/boulder"
 
 BRANCH=$(cd ${REPO}; git symbolic-ref --short HEAD)
 LABEL=$(cd ${REPO}; git rev-parse --short HEAD)
-
-DOCKER_REPO="quay.io/letsencrypt/boulder"
 TAG=${DOCKER_REPO}:${LABEL}
+
 
 upgrade() {
 	cd ${REPO}
@@ -30,6 +30,7 @@ upgrade() {
 
 	BRANCH=$(cd ${REPO}; git symbolic-ref --short HEAD)
 	LABEL=$(cd ${REPO}; git rev-parse --short HEAD)
+	TAG=${DOCKER_REPO}:${LABEL}
 
 	echo "Updated to ${LABEL}."
 }
