@@ -26,18 +26,17 @@ TAG=${DOCKER_REPO}:${LABEL}
 upgrade() {
   cd ${REPO}
 
-  OLDLABEL=$(cd ${REPO}; git rev-parse --short HEAD)
-
   git fetch
-  git checkout ${BRANCH}  || die "Couldn't switch"
-  git reset --hard origin/${BRANCH} || die "Couldn't reset"
+  git checkout ${BRANCH}  || die "Could not switch"
+  git reset --hard origin/${BRANCH} || die "Could not reset"
 
   BRANCH=$(cd ${REPO}; git symbolic-ref --short HEAD)
   LABEL=$(cd ${REPO}; git rev-parse --short HEAD)
   TAG=${DOCKER_REPO}:${LABEL}
 
-  if [ "${OLDLABEL}" == "${LABEL}" ] ; then
-    die "${LABEL} is the latest version."
+  imageList=$(docker images | grep ${LABEL})
+  if [ "x${imageList}" != "x" ]; then
+    die "Already built: ${imageList}"
   fi
 
   echo "Updated to ${LABEL}."
