@@ -15,7 +15,7 @@ run() {
 }
 
 REPO=${GOPATH}/src/github.com/letsencrypt/boulder
-SOURCE=~/
+SOURCE=$(cd $(dirname $0); pwd)
 DOCKER_REPO="quay.io/letsencrypt/boulder"
 
 BRANCH=${BRANCH:-master}
@@ -55,16 +55,16 @@ build() {
   mkdir -p ${DEST}/etc ${DEST}/bin
   cp Dockerfile ${DEST}
   cp default-boulder-config.json ${DEST}/etc
-  cp ./gocode/src/github.com/letsencrypt/boulder/test/test-ca.pem ${DEST}/etc
-  cp ./gocode/src/github.com/letsencrypt/boulder/test/test-ca.key ${DEST}/etc
-  cp ~/letsencrypt/boulder/bin/* ${DEST}/bin
+  cp ${REPO}/test/test-ca.pem ${DEST}/etc
+  cp ${REPO}/test/test-ca.key ${DEST}/etc
+  cp ${REPO}/bin/* ${DEST}/bin
 
   cd ${DEST}
 
   # TODO: Check if git is out of date
 
   echo "Building ${TAG} ..."
-  run docker build -t ${TAG} .
+  run docker build -t ${TAG} . || die "Couldn't build"
   echo "Built ${TAG}"
 
   echo "Cleaning up..."
@@ -72,8 +72,8 @@ build() {
 }
 
 send() {
-  run docker tag -f ${TAG} ${DOCKER_REPO}:latest
-  run docker tag -f ${TAG} ${DOCKER_REPO}:${BRANCH}
+  run docker tag -f ${TAG} ${DOCKER_REPO}:latest || die "Couldn't tag latest"
+  run docker tag -f ${TAG} ${DOCKER_REPO}:${BRANCH} || die "Couldn't tag branch"
 
   run docker push ${TAG}
   run docker push ${DOCKER_REPO}:${BRANCH}
