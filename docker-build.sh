@@ -71,11 +71,12 @@ build() {
 }
 
 send() {
-  run docker tag -f ${TAG} ${DOCKER_REPO}:latest || die "Couldn't tag latest"
-  run docker tag -f ${TAG} ${DOCKER_REPO}:${BRANCH} || die "Couldn't tag branch"
-
   run docker push ${TAG}
+
+  run docker tag -f ${TAG} ${DOCKER_REPO}:${BRANCH} || die "Couldn't tag branch"
   run docker push ${DOCKER_REPO}:${BRANCH}
+
+  run docker tag -f ${TAG} ${DOCKER_REPO}:latest || die "Couldn't tag latest"
   run docker push ${DOCKER_REPO}:latest
 }
 
